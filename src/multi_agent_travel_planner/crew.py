@@ -1,13 +1,26 @@
-from crewai import Agent, Crew, Process, Task
-from crewai.project import CrewBase, agent, crew, task
+from crewai import Agent, Crew, Process, Task, LLM
+from crewai.project import CrewBase, agent, crew, task, after_kickoff
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai_tools import SerperDevTool
+from .tools.custom_tool import CalculatorTool
+from .rate_limit_llm import make_rate_limit_llm  # ← import the wrapper
 from typing import List
-from crewai import Agent, Crew, Process, Task, LLM
 
-# If you want to run a snippet of code before or after the crew starts,
-# you can use the @before_kickoff and @after_kickoff decorators
-# https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
+import logging
+import os
+
+logging.getLogger("LiteLLM").setLevel(logging.CRITICAL)
+
+os.environ["LITELLM_PROXY"] = "False"
+os.environ["LITELLM_SERVER"] = "False"
+os.environ["LITELLM_DISABLE_SPEND_LOGGING"] = "True"
+os.environ["LITELLM_TELEMETRY"] = "False"
+os.environ["LITELLM_LOG"] = "CRITICAL"
+os.environ["LITELLM_MODE"] = "PRODUCTION"
+
+
+MODEL = os.getenv("MODEL_NAME")
+MAX_TOKEN = os.getenv("MAX_TOKEN")
 
 
 @CrewBase
@@ -16,65 +29,119 @@ class MultiAgentTravelPlanner:
 
     agents: List[BaseAgent]
     tasks: List[Task]
+    serper_tool = SerperDevTool()
+    serper_tool.name = "serper_search"
 
-    # Create shared LLM here
     llm = LLM(
-        model="gemini/gemini-2.5-flash",
-        temperature=0,
-        max_rpm=5,
+        model=MODEL,
+        temperature=0.2,
+        max_tokens=int(MAX_TOKEN),
     )
 
-    # Learn more about YAML configuration files here:
-    # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
-    # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
-
-    # If you would like to add tools to your agents, you can learn more about it here:
-    # https://docs.crewai.com/concepts/agents#agent-tools
     @agent
-    def researcher(self) -> Agent:
+    def destination_researcher(self) -> Agent:
         return Agent(
-            config=self.agents_config["researcher"],  # type: ignore[index]
+            config=self.agents_config["destination_researcher"],
             verbose=True,
-            tools=[SerperDevTool()],
+            tools=[self.serper_tool],
             llm=self.llm,
             max_iter=1,
         )
 
     @agent
-    def reporting_analyst(self) -> Agent:
+    def budget_planner(self) -> Agent:
         return Agent(
-            config=self.agents_config["reporting_analyst"],  # type: ignore[index]
+            config=self.agents_config["budget_planner"],
             verbose=True,
+            tools=[self.serper_tool, CalculatorTool()],
+            llm=self.llm,
+            max_iter=2,
+        )
+
+    @agent
+    def itinerary_designer(self) -> Agent:
+        return Agent(
+            config=self.agents_config["itinerary_designer"],
+            verbose=True,
+            tools=[self.serper_tool],
+            llm=self.llm,
+            max_iter=2,
+        )
+
+    @agent
+    def validation_agent(self) -> Agent:
+        return Agent(
+            config=self.agents_config["validation_agent"],
+            verbose=True,
+            tools=[CalculatorTool()],
             llm=self.llm,
             max_iter=1,
         )
 
-    # To learn more about structured task outputs,
-    # task dependencies, and task callbacks, check out the documentation:
-    # https://docs.crewai.com/concepts/tasks#overview-of-a-task
     @task
     def research_task(self) -> Task:
         return Task(
-            config=self.tasks_config["research_task"],  # type: ignore[index]
+            config=self.tasks_config["research_task"],
+            output_file="output/research.md",
         )
 
     @task
-    def reporting_task(self) -> Task:
+    def budget_task(self) -> Task:
         return Task(
-            config=self.tasks_config["reporting_task"],  # type: ignore[index]
-            output_file="output/report.md",
+            config=self.tasks_config["budget_task"],
+            context=[self.research_task()],
+            output_file="output/budget.md",
         )
+
+    @task
+    def itinerary_task(self) -> Task:
+        return Task(
+            config=self.tasks_config["itinerary_task"],
+            context=[self.research_task(), self.budget_task()],
+            output_file="output/itinerary.md",
+        )
+
+    @task
+    def validation_task(self) -> Task:
+        return Task(
+            config=self.tasks_config["validation_task"],
+            context=[
+                self.research_task(),
+                self.budget_task(),
+                self.itinerary_task(),
+            ],
+            output_file="output/validation.md",
+        )
+
+    # ─── Merge Hook ───────────────────────────────────────────────────────────
+
+    @after_kickoff
+    def merge_all_task_outputs_hook(self, crew_instance):
+        output_files = [
+            "output/research.md",
+            "output/budget.md",
+            "output/itinerary.md",
+            "output/validation.md",
+        ]
+        merged_file = "output/full_trip_plan.md"
+
+        with open(merged_file, "w", encoding="utf-8") as outfile:
+            for idx, file_path in enumerate(output_files, start=1):
+                if os.path.exists(file_path):
+                    with open(file_path, "r", encoding="utf-8") as infile:
+                        outfile.write(f"# Section {idx}\n\n")
+                        outfile.write(infile.read() + "\n\n---\n\n")
+
+        print(f"[INFO] All task outputs merged into {merged_file}")
+
+    # ─── Crew ─────────────────────────────────────────────────────────────────
 
     @crew
     def crew(self) -> Crew:
-        """Creates the MultiAgentTravelPlanner crew"""
-        # To learn how to add knowledge sources to your crew, check out the documentation:
-        # https://docs.crewai.com/concepts/knowledge#what-is-knowledge
-
         return Crew(
-            agents=self.agents,  # Automatically created by the @agent decorator
-            tasks=self.tasks,  # Automatically created by the @task decorator
+            agents=self.agents,
+            tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
-            # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
+            tracing=True,
         )

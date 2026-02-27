@@ -1,18 +1,216 @@
+# -----------------------------
+# Multi-Agent Travel Planner Tasks
+# -----------------------------
+
 research_task:
   description: >
-    Conduct a thorough research about {topic}
-    Make sure you find any interesting and relevant information given
-    the current year is {current_year}.
-  expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
-  agent: researcher
+    Research the travel destination comprehensively.
 
-reporting_task:
-  description: >
-    Review the context you got and expand each topic into a full section for a report.
-    Make sure the report is detailed and contains any and all relevant information.
+    **Destination:** {destination}  
+    **Travel Dates:** {travel_dates}  
+    **Total Budget:** ${budget} USD  
+    **Traveler Preferences:** {preferences}
+
+    You MUST use the serper_search tool to search for:
+    1. Top attractions and must-see sights in {destination}
+    2. Local culture, customs, and etiquette
+    3. Best neighborhoods / areas to stay
+    4. Weather and climate during {travel_dates}
+    5. Practical info: local currency, language, safety tips
+    6. Hidden gems and local experiences that match preferences: {preferences}
+    
+    Do NOT make up information.
+
   expected_output: >
-    A fully fledged report with the main topics, each with a full section of information.
-    Formatted as markdown without '```'
-  agent: reporting_analyst
-  output_file: report.md
+    # Destination Overview: {destination}
+
+    Respect the formatting and structure below EXACTLY. Use Markdown tables where indicated.
+
+    **Travel Dates:** {travel_dates}  
+    **Planned Budget:** ${budget} USD  
+    **Traveler Preferences:** {preferences}
+
+    ---
+
+    ## 1. Top Attractions
+    Provide at least 5 major attractions.
+
+    | Attraction | Description | Estimated Entry Fee | Why Visit |
+    |------------|------------|--------------------|-----------|
+    | Name | Short 2-3 line description | $X | Highlight value |
+
+    ---
+
+    ## 2. Best Areas to Stay
+
+    | Neighborhood | Best For | Average Price Range | Notes |
+    |--------------|----------|--------------------|------|
+    | Area Name | Families / Nightlife / Budget | $X–$Y | Short description |
+
+    ---
+
+    ## 3. Local Culture & Tips
+    - Key customs and etiquette
+    - Tipping culture (if applicable)
+
+    ---
+
+  agent: destination_researcher
+
+# -----------------------------
+budget_task:
+  description: >
+    Create a detailed, realistic budget breakdown for this trip that is close to the traveler's stated total budget.
+
+    **Destination:** {destination}  
+    **Travel Dates:** {travel_dates}  
+    **Total Budget:** ${budget} USD  
+    **Preferences:** {preferences}
+
+    Steps:
+    1. USE the attractions, neighborhoods, and hidden gems from the `research_task` output.
+    2. Use serper_search tool to find current price ranges for:
+       - Hotels / hostels / Airbnb in {destination} (per night)
+       - Average meal costs (budget, mid-range, fine dining)
+       - Local transport costs (taxi, metro, bus, car rental)
+       - Entry fees for major attractions from research_task
+
+    3. You use the Calculator tool to calculate (remove currency symbols when calculate):
+        accommodation_total = nightly_rate × number_of_nights
+        food_total = meals_per_day × avg_meal_cost × number_of_days
+        transport_total = daily_transport_cost × number_of_days
+        activities_total = sum(all attraction entry fees)
+
+      - Then compute:
+        grand_total = accommodation_total + food_total + transport_total + activities_total
+
+    4. Use the Calculator tool to calculate accommodation, food, transport, activities costs for the entire trip based on travel dates and preferences.
+    5. Calculate per-day and per-person costs.
+
+  expected_output: >
+    Respect the formatting and structure below.
+    A structured Markdown report titled "Budget Plan: {destination}" containing:
+    - Budget Summary table:
+      | Category        | Estimated Cost | 
+      |-----------------|----------------|
+      | Accommodation   | ...            |
+      | Food            | ...            |
+      | Local Transport | ...            |
+      | Activities      | ...            |
+      | Miscellaneous   | ...            |
+      | **TOTAL**       | ...            |
+    - Budget vs. Available comparison with clear PASS / WARNING / FAIL status.
+    - Pricing assumptions and sources.
+    - Recommendations if budget is tight or insufficient.
+
+  agent: budget_planner
+
+
+# -----------------------------
+itinerary_task:
+  description: >
+    Design a complete day-by-day itinerary for the trip.
+
+    **Destination:** {destination}  
+    **Travel Dates:** {travel_dates}  
+    **Preferences:** {preferences}  
+    **Budget:** ${budget} USD
+
+    Instructions:
+    1. Build itinerary based on `research_task` (attractions, hidden gems) and `budget_task` (budget limits).  
+    2. Use serper_search ONLY to verify opening hours, booking requirements, and travel times.  
+    3. Plan morning, afternoon, and evening activities with realistic timing.  
+    4. Include specific restaurant recommendations within budget.  
+    5. Include transport method between locations.  
+    6. Ensure no scheduling conflicts (e.g., museums closed on Mondays).  
+    7. Include estimated costs per activity so they stay within the daily budget.
+    8. Daily totals MUST align with category allocations from budget_task.
+    9. The sum of total daily costs must be closer to the daily budget allocation from budget_task. If not, adjust the itinerary by adding activities, upgrading meals, or improving accommodations until it is within ±10% of the daily budget.
+    9. The sum of all daily totals MUST equal the grand_total from budget_task.
+    10. If the sum is too low (more than 10% under budget), you MUST add activities, upgrade accommodations, upgrade meals to utilize the budget effectively. Do NOT finalize an itinerary that is more than 10% under the stated budget.
+    10. Do NOT invent new price assumptions.
+
+  expected_output: >
+    A complete Day-wise Itinerary in Markdown:
+
+    IMPORTANT FORMATTING RULES:
+    - Each field MUST be on a new line.
+    - Use dash (-) bullet formatting exactly as shown.
+    - Do NOT write inline text after section headers.
+    - Follow spacing exactly.
+
+    # Day-wise Itinerary: {destination} ({travel_dates})
+
+    **Total Budget:** ${budget} USD  
+    **Travel Preferences:** {preferences}
+
+    ---
+    For EACH day, follow this exact structure:
+    ---
+
+    ## Day X – [Theme or Area Focus]
+
+    ### Morning (9:00 – 12:00)
+    - **Activity:**  
+    - **Location:**  
+    - **Transport Method:**  
+    - **Travel Time:** X minutes  
+    - **Notes:** (booking required? tips?)
+
+    ### Afternoon (12:00 – 17:00)
+    - **Activity:**  
+    - **Location:**  
+    - **Lunch Recommendation:** (Name + price range)  
+    - **Transport Method:**  
+    - **Travel Time:**  
+
+    ### Evening (17:00 – 21:00)
+    - **Activity:**  
+    - **Location:**  
+    - **Dinner Recommendation:** (Name + price range)  
+    - **Transport Method:**  
+    - **Notes:**  
+
+    (Repeat for all days)
+    ---
+
+  agent: itinerary_designer
+
+
+validation_task:
+  description: >
+    Perform a thorough validation of the complete travel plan.
+
+    **Destination:** {destination}  
+    **Total Budget:** ${budget} USD
+
+    Validation checklist:
+    1. Compare with:
+      - budget_task grand_total
+      - original ${budget}
+    2. If variance is more than ±10% of ${budget} in EITHER direction, status = FAIL.
+      - Underspending by >10% means the plan is not utilizing the budget properly
+      - Overspending by >10% means the plan exceeds what the traveler can afford
+    3. **Schedule Feasibility:** Are daily timings realistic? Is travel time between locations accounted for?  
+    4. **Risk Factors:** Identify 3-5 potential risks. 
+    5. **Assumptions:** List all assumptions made in the plan.
+
+  expected_output: >
+    ## Validation Summary: {destination} Travel Plan
+
+    ### Budget Validation
+    - Planned Total: $X | Actual Budget: ${budget}
+    - Variance: $X (over/under)
+    - Status: PASS / WARN / FAIL
+
+    ### Schedule Feasibility
+    - Findings per day
+
+    ### Risk Factors
+    1. Risk 1 - mitigation tip
+    2. Risk 2 - mitigation tip
+
+    ### Assumptions Made
+    - List of assumptions
+
+  agent: validation_agent

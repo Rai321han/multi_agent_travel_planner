@@ -1,12 +1,4 @@
 from crewai.tools import BaseTool
-from typing import Type
-from pydantic import BaseModel, Field
-
-
-class CalculatorToolInput(BaseModel):
-    """Input schema for CalculatorTool."""
-
-    argument: str = Field(..., description="Description of the argument.")
 
 
 class CalculatorTool(BaseTool):
@@ -15,11 +7,9 @@ class CalculatorTool(BaseTool):
         "Calculate travel costs including accommodation, food, transport, and activities"
     )
 
-    args_schema: Type[BaseModel] = CalculatorToolInput
-
-    def _run(self, argument: str) -> str:
+    def _run(self, expression: str) -> str:
         try:
-            result = eval(argument)
+            result = eval(expression)
             return str(result)
         except Exception as e:
             return f"Calculation error: {str(e)}"
