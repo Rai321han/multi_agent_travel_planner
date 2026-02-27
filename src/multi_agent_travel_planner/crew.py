@@ -44,7 +44,7 @@ class MultiAgentTravelPlanner:
             verbose=True,
             tools=[self.serper_tool],
             llm=self.llm,
-            max_iter=1,
+            max_iter=2,
         )
 
     @agent

@@ -20,7 +20,7 @@ An AI-powered travel planning system built with [CrewAI](https://crewai.com), wh
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Usage](#usage)
-- [Output](#output)
+- [Input and Output](#input-and-output)
 - [Tools Used](#tools-used)
 - [Token Usage](#token-usage)
 ---
@@ -197,14 +197,13 @@ Run the planner interactively and enter trip details when prompted:
 crewai run
 ```
 
+## Input and Output
+
 You'll be asked for:
 - **Destination** (e.g., `Paris, France`)
 - **Travel Dates** (e.g., `2025-08-01 to 2025-08-07`)
 - **Total Budget in USD** (e.g., `3000`)
 - **Preferences** (e.g., `adventure, food, culture`)
----
-
-## Output
 
 After a successful run, the `output/` directory will contain:
 
