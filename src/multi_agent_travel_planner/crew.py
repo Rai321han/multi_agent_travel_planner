@@ -3,7 +3,6 @@ from crewai.project import CrewBase, agent, crew, task, after_kickoff
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai_tools import SerperDevTool
 from .tools.custom_tool import CalculatorTool
-from .rate_limit_llm import make_rate_limit_llm  # ← import the wrapper
 from typing import List
 
 import logging
@@ -116,7 +115,7 @@ class MultiAgentTravelPlanner:
     # ─── Merge Hook ───────────────────────────────────────────────────────────
 
     @after_kickoff
-    def merge_all_task_outputs_hook(self, crew_instance):
+    def merge_all_task_outputs_hook(self, output):
         output_files = [
             "output/research.md",
             "output/budget.md",
@@ -133,6 +132,7 @@ class MultiAgentTravelPlanner:
                         outfile.write(infile.read() + "\n\n---\n\n")
 
         print(f"[INFO] All task outputs merged into {merged_file}")
+        return output
 
     # ─── Crew ─────────────────────────────────────────────────────────────────
 

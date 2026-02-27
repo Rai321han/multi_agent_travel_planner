@@ -14,28 +14,6 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 # interpolate any tasks and agents information
 
 
-def print_token_usage(result):
-    usage = result.token_usage or None
-    print(result)
-    # Some implementations might not populate every field
-    if usage:
-        total = usage.get("total_tokens") or usage.get("total") or 0
-        prompt = usage.get("prompt_tokens") or usage.get("prompt") or 0
-        completion = usage.get("completion_tokens") or usage.get("completion") or 0
-        cached = usage.get("cached_prompt_tokens") or usage.get("cached_prompt") or 0
-        successful = usage.get("successful_requests") or usage.get("successful") or 0
-
-        print("TOKEN USAGE")
-        print(f"  Total tokens       {total:,}")
-        print(f"  Prompt tokens      {prompt:,}")
-        print(f"  Completion tokens  {completion:,}")
-        print(f"  Cached prompt      {cached:,}")
-        print(f"  Successful reqs    {successful:,}")
-        print()
-    else:
-        print("\nToken usage data not available.")
-
-
 def get_user_inputs() -> dict:
     """Collect travel planning inputs from the user interactively."""
     print("\n" + "=" * 60)
@@ -71,8 +49,8 @@ def run():
     inputs = get_user_inputs()
 
     try:
-        result = MultiAgentTravelPlanner().crew().kickoff(inputs=inputs)
-        print_token_usage(result)
+        output = MultiAgentTravelPlanner().crew().kickoff(inputs=inputs)
+        print(f"Token Usage: {output.token_usage}")
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
 

@@ -22,9 +22,7 @@ An AI-powered travel planning system built with [CrewAI](https://crewai.com), wh
 - [Usage](#usage)
 - [Output](#output)
 - [Tools Used](#tools-used)
-- [Contributing](#contributing)
-- [License](#license)
-
+- [Token Usage](#token-usage)
 ---
 
 ## Overview
@@ -232,6 +230,17 @@ After a successful run, the `output/` directory will contain:
 ```
 
 ---
+
+## Token Usage
+| name  |   counts  |
+|-|-|
+| total_tokens | 25344 | 
+| prompt_tokens | 21636 |
+| cached_prompt_tokens | 0 |
+| completion_tokens | 3708 |
+| successful_requests | 16 |
+----
+
 
 ## Tools Used
 
