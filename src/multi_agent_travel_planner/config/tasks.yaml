@@ -6,6 +6,10 @@ research_task:
   description: >
     Research the travel destination comprehensively.
 
+    - DO NOT describe what you will do
+    - DO NOT include internal reasoning
+    - Only provide expected markdown
+
     **Destination:** {destination}  
     **Travel Dates:** {travel_dates}  
     **Total Budget:** ${budget} USD  
@@ -60,6 +64,10 @@ research_task:
 # -----------------------------
 budget_task:
   description: >
+    - DO NOT describe what you will do
+    - DO NOT include internal reasoning
+    - Only provide expected markdown
+
     Create a detailed, realistic budget breakdown for this trip that is close to the traveler's stated total budget.
 
     **Destination:** {destination}  
@@ -102,13 +110,17 @@ budget_task:
     - Budget vs. Available comparison with clear PASS / WARNING / FAIL status.
     - Pricing assumptions and sources.
     - Recommendations if budget is tight or insufficient.
-
+    ---
   agent: budget_planner
 
 
 # -----------------------------
 itinerary_task:
   description: >
+    - DO NOT describe what you will do
+    - DO NOT include internal reasoning
+    - Only provide expected markdown
+    
     Design a complete day-by-day itinerary for the trip.
 
     **Destination:** {destination}  
@@ -179,6 +191,10 @@ itinerary_task:
 
 validation_task:
   description: >
+    - DO NOT describe what you will do
+    - DO NOT include internal reasoning
+    - Only provide expected markdown
+    
     Perform a thorough validation of the complete travel plan.
 
     **Destination:** {destination}  
@@ -212,5 +228,6 @@ validation_task:
 
     ### Assumptions Made
     - List of assumptions
+    ---
 
   agent: validation_agent

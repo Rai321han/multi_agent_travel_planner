@@ -4,7 +4,7 @@ from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai_tools import SerperDevTool
 from .tools.custom_tool import CalculatorTool
 from typing import List
-
+from .config.settings import MAX_TOKEN, TEMPERATURE, AGENT_MAX_ITER
 import logging
 import os
 
@@ -19,7 +19,6 @@ os.environ["LITELLM_MODE"] = "PRODUCTION"
 
 
 MODEL = os.getenv("MODEL_NAME")
-MAX_TOKEN = os.getenv("MAX_TOKEN")
 
 
 @CrewBase
@@ -33,7 +32,7 @@ class MultiAgentTravelPlanner:
 
     llm = LLM(
         model=MODEL,
-        temperature=0.2,
+        temperature=TEMPERATURE,
         max_tokens=int(MAX_TOKEN),
     )
 
@@ -44,7 +43,7 @@ class MultiAgentTravelPlanner:
             verbose=True,
             tools=[self.serper_tool],
             llm=self.llm,
-            max_iter=2,
+            max_iter=AGENT_MAX_ITER["destination_researcher"],
         )
 
     @agent
@@ -54,7 +53,7 @@ class MultiAgentTravelPlanner:
             verbose=True,
             tools=[self.serper_tool, CalculatorTool()],
             llm=self.llm,
-            max_iter=2,
+            max_iter=AGENT_MAX_ITER["budget_planner"],
         )
 
     @agent
@@ -64,7 +63,7 @@ class MultiAgentTravelPlanner:
             verbose=True,
             tools=[self.serper_tool],
             llm=self.llm,
-            max_iter=2,
+            max_iter=AGENT_MAX_ITER["itinerary_designer"],
         )
 
     @agent
@@ -74,7 +73,7 @@ class MultiAgentTravelPlanner:
             verbose=True,
             tools=[CalculatorTool()],
             llm=self.llm,
-            max_iter=1,
+            max_iter=AGENT_MAX_ITER["validation_agent"],
         )
 
     @task

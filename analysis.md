@@ -18,7 +18,7 @@ destination_researcher and budget_planner both have max_iter=2, so each gets one
 
 
 # Token Usage
-25,344 total tokens across 16 requests, with an 85%/15% prompt-to-completion ratio. Agents are spending most tokens re-reading prior task outputs rather than generating new content — a sign of context bloat.
+25,344 total tokens across 16 requests, with an 85%/15% prompt-to-completion ratio. Agents are spending most tokens re-reading prior task outputs rather than generating new content which is a sign of context bloat.
 MAX_TOKEN=2500 is likely causing output truncation, which forces downstream agents to reason around incomplete context, inflating their prompts further. Raising it to 4000–6000 and having the research task output a compact structured summary instead of full Markdown would reduce this significantly.
 
 
