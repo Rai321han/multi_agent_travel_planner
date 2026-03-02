@@ -105,6 +105,7 @@ multi_agent_travel_planner/
 ├── src/
 │   └── multi_agent_travel_planner/
 │       ├── config/
+│       │   ├── settings.py          # Tunable values
 │       │   ├── agents.yaml          # Agent role definitions & goals
 │       │   └── tasks.yaml           # Task descriptions & expected outputs
 │       ├── tools/
