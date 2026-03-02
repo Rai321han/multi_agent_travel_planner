@@ -175,7 +175,6 @@ Create a `.env` file in the project root:
 SERPER_API_KEY=your_serper_api_key_here
 GROQ_API_KEY=your_groq_api_key_here
 MODEL_NAME="groq/llama-3.3-70b-versatile"
-MAX_TOKEN=2500
 ```
 
 | Variable | Description | Default |
@@ -183,9 +182,30 @@ MAX_TOKEN=2500
 | `SERPER_API_KEY` | Serper.dev API key for web search | Required |
 | `GROQ_API_KEY` | Groq API key for LLM inference | Required |
 | `MODEL_NAME` | LiteLLM-compatible model identifier | `groq/llama-3.3-70b-versatile` |
-| `MAX_TOKEN` | Maximum tokens per LLM response | `2500` |
 
----
+
+### Other Configuration `config/settings.py`
+
+### 1. LLM Settings
+
+| Variable      | Description                                       | Example       |
+|---------------|---------------------------------------------------|---------------|
+| `MAX_TOKEN`   | Maximum tokens allowed per LLM call              | `2500`         |
+| `TEMPERATURE` | LLM creativity/variability (0 = deterministic)  | `0.2`          |
+
+
+### 2. Agent Max Iterations
+
+`AGENT_MAX_ITER` specifies the maximum number of iterations each agent should perform before stopping.  
+
+```python
+AGENT_MAX_ITER = {
+    "destination_researcher": 2,
+    "budget_planner": 2,
+    "itinerary_designer": 2,
+    "validation_agent": 1,
+}
+```
 
 ## Usage
 
